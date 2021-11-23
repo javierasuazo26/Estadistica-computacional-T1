@@ -1,0 +1,85 @@
+#Cargamos paquetes
+library(tidyverse)
+library(dplyr)
+#Ejercicio b
+#Muestra aleatoria de tamaño n=100 y parametro theta=1
+set.seed(12345)
+data<-rexp(n=100,rate = 1)
+#VISUALIZACIÓN DATOS 
+df<-data.frame(data)
+df %>% ggplot(aes(x=data))+
+  geom_histogram(bins=100,fill="violet")+
+  xlab("y")+ylab("frecuencia")+
+  theme_bw(base_size=16)+
+  ggtitle("Distribución Exponencial n=100 y theta=5")
+
+#VEROSIMILITUD
+like<-function(tetha,y){
+  like<-prod(dexp(y,rate = tetha))
+  return(like)
+}
+tetha.all<-seq(0.01,2,by=0.02)
+like.all<-sapply(tetha.all,function(tetha){like(tetha,data)})
+like.df<-data.frame(like.all,tetha.all)
+
+#PARA VISUALIZAR LA VEROSIMILITUD
+like.df %>%
+  ggplot(aes(tetha.all,like.all))+
+  geom_line(size=1,color="violet")+
+  xlab("tetha")+ylab("verosimilitud")+
+  theme_bw(base_size = 16) +
+  geom_vline(xintercept = tetha.all[which.max(like.all)], color="red",size=1)
+
+#LOGVEROSIMILITUD
+loglike<-function(theta,y){
+  n<-length(y)
+  loglike<- n*log(theta) - theta*sum(y)
+  return(loglike)
+}
+theta.all<-seq(1,15,by=0.05)
+loglike.all<-sapply(theta.all,function(theta){loglike(theta,data)})
+loglike.df<-data.frame(loglike.all,theta.all)
+
+#PARA VISUALIZAR LA LOG-VEROSIMILITUD
+loglike.df %>%
+  ggplot(aes(theta.all,loglike.all))+
+  geom_line(size=1,color="violet")+
+  xlab("theta")+
+  ylab("Log-verosimilitud")+
+  theme_bw(base_size = 16) +
+  geom_vline(xintercept = theta.all[which.max(loglike.all)], color="red",size=1)
+#c) 
+MV <- function(y){
+  1/mean(y)
+}
+theta <- MV(data)
+
+
+#d)
+derivada1<-function(theta, y=data){
+  n <- length(y)
+  n/theta-sum(y)
+}
+
+derivada2<-function(theta, y=data){
+  n <- length(y)
+ - n/((theta)^(2)) leng
+}
+tolerancia<-0.0001
+p0<-1
+i<-1
+while (i<20) {
+  p <- p0 - (derivada1(p0)/derivada2(p0))
+  error<-abs(p-p0)
+  if (error<tolerancia){
+    print(p)
+    break
+  }
+  p0<-p
+}
+negloglike<-function(theta,y=data){
+  n<-length(y)
+  negloglike<- -(n*log(theta) - theta*sum(y))
+  return(negloglike)
+}
+optim(par = 1,fn = negloglike,method = 'BFGS')
